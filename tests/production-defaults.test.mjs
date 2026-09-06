@@ -27,3 +27,14 @@ test('production defaults include the known contact email and verified Facebook 
   assert.match(site,/email:\s*info@harrisonwatersolution\.com/);
   assert.match(site,/https:\/\/www\.facebook\.com\/61571525077104\//);
 });
+
+test('admin settings can edit social links without code changes',()=>{
+  const admin=read('public/admin/app.js');
+  assert.match(admin,/arrayEditor\('settings\.socials'/);
+});
+
+test('deployment documentation matches exact-email RLS authorization',()=>{
+  const docs=read('docs/deployment.md');
+  assert.doesNotMatch(docs,/harrison_site_admins/);
+  assert.match(docs,/info@harrisonwatersolution\.com/);
+});
