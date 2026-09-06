@@ -9,10 +9,12 @@ brand:
 contact:
   phone: ''
   whatsapp: ''
-  email: ''
+  email: info@harrisonwatersolution.com
   address: ''
   openingHours: ''
-socials: []
+socials:
+  - name: Facebook
+    url: https://www.facebook.com/61571525077104/
 seo:
   title: Harrison Water Solution & Machinery Services
   description: Water treatment, water factory machinery and related technical services.
