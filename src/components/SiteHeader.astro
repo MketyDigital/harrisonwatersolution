@@ -2,4 +2,4 @@
 const { companyName = 'Harrison Water Solution & Machinery Services' } = Astro.props;
 const links=[['/','Home'],['/about/','About'],['/products/','Products'],['/services/','Services'],['/projects/','Projects'],['/contact/','Contact'],['/water-business-blueprint/','eBook']];
 ---
-<header class="site-header"><div class="container nav"><a class="brand" href="/">{companyName}</a><nav class="nav-links" aria-label="Main navigation">{links.map(([href,label])=><a href={href}>{label}</a>)}</nav><details class="mobile-nav"><summary>Menu</summary><nav>{links.map(([href,label])=><div><a href={href}>{label}</a></div>)}</nav></details></div></header>
+<header class="site-header"><div class="container nav"><a class="brand" href="/" data-hws-company>{companyName}</a><nav class="nav-links" aria-label="Main navigation">{links.map(([href,label])=><a href={href}>{label}</a>)}</nav><details class="mobile-nav"><summary>Menu</summary><nav>{links.map(([href,label])=><div><a href={href}>{label}</a></div>)}</nav></details></div></header>

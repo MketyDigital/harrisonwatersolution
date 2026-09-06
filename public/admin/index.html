@@ -1,12 +1,4 @@
 <!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="robots" content="noindex" />
-    <title>Harrison Website Admin</title>
-  </head>
-  <body>
-    <script src="https://unpkg.com/@sveltia/cms/dist/sveltia-cms.js"></script>
-  </body>
-</html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Harrison Website Admin</title><style>
+:root{font-family:Inter,system-ui,sans-serif;color:#16323b;background:#f3f7f8}*{box-sizing:border-box}body{margin:0}.wrap{max-width:1180px;margin:auto;padding:24px}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}.card{background:#fff;border:1px solid #dce7ea;border-radius:16px;padding:18px;box-shadow:0 8px 30px rgba(18,59,74,.06)}input,textarea,select{width:100%;padding:11px 12px;border:1px solid #cbdadd;border-radius:9px;font:inherit}textarea{min-height:100px}label{font-weight:700;font-size:.9rem;display:block;margin:13px 0 6px}button{background:#087a96;color:#fff;border:0;border-radius:9px;padding:11px 16px;font-weight:800;cursor:pointer}.secondary{background:#e9f3f5;color:#123b4a}.danger{background:#9b2c2c}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.tabs button.active{background:#123b4a}.collection{display:grid;gap:12px}.item{border:1px solid #e0e9eb;border-radius:12px;padding:14px;background:#fbfdfd}.muted{color:#66818a;font-size:.9rem}.hidden{display:none}.status{padding:10px 12px;border-radius:8px;background:#eaf7ed;margin:10px 0}.error{background:#fdecec;color:#8e2626}@media(max-width:760px){.grid{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}}
+</style></head><body><div class="wrap"><div class="top"><div><h1>Harrison Website Admin</h1><div class="muted">Edit text and links only. Images, videos and files stay on external URLs.</div></div><button id="logout" class="secondary hidden">Log out</button></div><div id="status"></div><section id="login" class="card"><h2>Sign in</h2><p class="muted">Use the Harrison admin email and password.</p><div class="grid"><div><label>Email</label><input id="email" type="email" autocomplete="username"></div><div><label>Password</label><input id="password" type="password" autocomplete="current-password"></div></div><p><button id="loginBtn">Sign in</button></p></section><section id="editor" class="hidden"><div class="tabs" id="tabs"></div><div id="panel" class="card"></div><div style="position:sticky;bottom:12px;margin-top:16px"><button id="saveBtn">Save & Publish</button></div></section></div><script type="module" src="/admin/app.js"></script></body></html>
