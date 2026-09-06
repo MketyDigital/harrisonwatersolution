@@ -1,6 +1,6 @@
 backend:
   name: github
-  repo: MketyDigital/harrison-water-solution
+  repo: MketyDigital/harrisonwatersolution
   branch: main
   auth_methods: [oauth]
   base_url: https://cms-auth.harrisonwatersolution.com
