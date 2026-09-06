@@ -1,0 +1,12 @@
+:root {
+  --brand-primary: #087a96;
+  --brand-secondary: #123b4a;
+  --brand-accent: #0ca6c9;
+  --text: #10252c;
+  --muted: #607178;
+  --surface: #ffffff;
+  --surface-soft: #f4f8f9;
+  --border: #dce6e9;
+  --radius: 14px;
+  --content: 1180px;
+}

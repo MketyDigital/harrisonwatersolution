@@ -1,0 +1,28 @@
+title: Home
+hero:
+  eyebrow: Water Treatment • Machinery • Factory Support
+  heading: Practical water-production solutions built around your operation
+  text: From water treatment systems and production machinery to factory setup guidance and technical support, Harrison Water Solution helps clients plan and execute dependable water-production projects.
+  primaryCta: Request a Quote
+  secondaryCta: View Products
+servicesHeading: What We Help You Do
+productsHeading: Machinery & Equipment
+whyHeading: Built for practical factory needs
+whyItems:
+  - title: Clear recommendations
+    text: Equipment and treatment decisions explained in practical terms before you commit.
+  - title: End-to-end thinking
+    text: Treatment, production flow, equipment and operations considered as one connected system.
+  - title: Support beyond purchase
+    text: The website is structured to showcase installation, maintenance and technical support as verified offerings are confirmed.
+projectsHeading: Selected Work
+processHeading: How an Engagement Works
+process:
+  - title: Tell us what you want to build
+    text: Share your product type, expected capacity, location and current stage.
+  - title: Get a practical recommendation
+    text: We align treatment, machinery and setup requirements to the project.
+  - title: Quote and implementation
+    text: Confirm scope, pricing and delivery before work begins.
+ctaHeading: Planning a water factory or upgrading an existing one?
+ctaText: Speak with Harrison Water Solution about the equipment, treatment and setup you need.

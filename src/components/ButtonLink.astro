@@ -1,0 +1,5 @@
+---
+const { href = '', label, secondary = false } = Astro.props;
+const disabled = !href;
+---
+{disabled ? <span class:list={['button','disabled',secondary && 'secondary']}>{label}</span> : <a class:list={['button',secondary && 'secondary']} href={href}>{label}</a>}

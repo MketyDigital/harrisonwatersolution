@@ -1,0 +1,17 @@
+name: Water Treatment Solutions
+slug: water-treatment-solutions
+summary: Treatment-system planning for water-production projects based on source-water quality and production requirements.
+description: Treatment may involve filtration, softening, reverse osmosis, UV, ozone and other stages depending on test results and the intended product.
+featured: true
+order: 1
+deliverables:
+  - Treatment-process recommendation
+  - Equipment sizing guidance
+  - Installation scope planning
+idealFor:
+  - New water factories
+  - Existing factories upgrading treatment
+heroImage: ''
+gallery: []
+seoTitle: Water Treatment Solutions | Harrison Water Solution
+seoDescription: Water treatment planning and system solutions for production projects.

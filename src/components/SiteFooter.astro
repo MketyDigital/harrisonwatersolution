@@ -1,0 +1,4 @@
+---
+const { site } = Astro.props; const contact=site.contact||{};
+---
+<footer class="site-footer"><div class="container footer-grid"><div><h3>{site.companyName}</h3><p>{site.seo?.description}</p></div><div><strong>Explore</strong><ul class="list-clean"><li><a href="/products/">Products</a></li><li><a href="/services/">Services</a></li><li><a href="/projects/">Projects</a></li><li><a href="/water-business-blueprint/">Water Business eBook</a></li></ul></div><div><strong>Contact</strong><ul class="list-clean">{contact.phone && <li><a href={`tel:${contact.phone}`}>{contact.phone}</a></li>}{contact.email && <li><a href={`mailto:${contact.email}`}>{contact.email}</a></li>}{contact.whatsapp && <li><a href={contact.whatsapp}>WhatsApp</a></li>}{contact.address && <li>{contact.address}</li>}</ul></div></div><div class="container"><p>© {new Date().getFullYear()} {site.companyName}. All rights reserved.</p></div></footer>
