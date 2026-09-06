@@ -11,6 +11,6 @@ test('international URL overrides primary', () => {
 test('missing market URL falls back to primary', () => {
   assert.equal(resolvePaymentUrl({ nigeriaUrl: '', internationalUrl: '', primaryUrl: 'main' }, 'ng'), 'main');
 });
-test('empty URLs return empty string', () => {
-  assert.equal(resolvePaymentUrl({ nigeriaUrl: '', internationalUrl: '', primaryUrl: '' }, 'default'), '');
+test('empty payment URLs fall back to the real contact page', () => {
+  assert.equal(resolvePaymentUrl({ nigeriaUrl: '', internationalUrl: '', primaryUrl: '' }, 'default'), '/contact/');
 });
