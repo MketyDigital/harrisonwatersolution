@@ -1,7 +1,7 @@
 # Deployment
 
 ## GitHub
-Create `MketyDigital/harrison-water-solution` with `main` as the production branch, then push this project.
+Create `MketyDigital/harrisonwatersolution` with `main` as the production branch, then push this project.
 
 ## Sveltia CMS OAuth
 The admin is at `/admin/` and uses the GitHub backend. Deploy the Sveltia CMS Authenticator on Cloudflare Workers and bind it to `cms-auth.harrisonwatersolution.com`. Create a GitHub OAuth App whose callback URL matches the authenticator documentation. Store the GitHub OAuth client secret only as a Cloudflare Worker secret; never commit it.
