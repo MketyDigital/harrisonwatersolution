@@ -2,6 +2,9 @@
   "name": "harrison-water-solution",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
@@ -10,11 +13,11 @@
     "check": "astro check"
   },
   "dependencies": {
-    "@astrojs/sitemap": "latest",
-    "astro": "latest"
+    "@astrojs/sitemap": "3.7.4",
+    "astro": "7.3.1"
   },
   "devDependencies": {
-    "@astrojs/check": "latest",
-    "typescript": "latest"
+    "@astrojs/check": "0.9.10",
+    "typescript": "7.0.2"
   }
 }
