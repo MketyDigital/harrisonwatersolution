@@ -50,7 +50,17 @@
 
   function applyGlobal(bundle) {
     const site = bundle.settings || {};
-    document.querySelectorAll('[data-hws-company]').forEach(el => el.textContent = site.companyName || el.textContent);
+    document.querySelectorAll('[data-hws-company]:not([data-hws-brand])').forEach(el => el.textContent = site.companyName || el.textContent);
+    document.querySelectorAll('[data-hws-brand]').forEach(el => {
+      const name=site.companyName||el.dataset.hwsCompany||'Harrison Water Solution';
+      const img=el.querySelector('.brand-logo'), text=el.querySelector('.brand-text');
+      if(!img||!text)return;
+      const raw=String(site.logo||'').trim();let url='';
+      try { const resolved=new URL(raw,location.origin);if(raw&&['http:','https:'].includes(resolved.protocol))url=resolved.href; } catch {}
+      const fallback=()=>{img.hidden=true;img.removeAttribute('src');text.hidden=false;text.textContent=name};
+      img.onerror=fallback;img.onload=()=>{img.hidden=false;text.hidden=true};img.alt=name;
+      if(url){text.hidden=true;img.hidden=false;if(img.src!==url)img.src=url;else if(img.complete&&img.naturalWidth===0)fallback()}else fallback();
+    });
     const desc = document.querySelector('[data-hws-footer-description]');
     if (desc && site.seo?.description) desc.textContent = site.seo.description;
     const contact = document.querySelector('[data-hws-footer-contact]');
