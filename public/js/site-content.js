@@ -76,9 +76,9 @@
       ].filter(Boolean).join('');
     }
     if (site.brand) {
-      document.body.style.setProperty('--brand-primary', site.brand.primary || '#087a96');
-      document.body.style.setProperty('--brand-secondary', site.brand.secondary || '#123b4a');
-      document.body.style.setProperty('--brand-accent', site.brand.accent || '#0ca6c9');
+      document.body.style.setProperty('--brand-primary', (!site.brand.primary || site.brand.primary.toLowerCase()==='#087a96' ? '#002BD8' : site.brand.primary));
+      document.body.style.setProperty('--brand-secondary', (!site.brand.secondary || site.brand.secondary.toLowerCase()==='#123b4a' ? '#00249B' : site.brand.secondary));
+      document.body.style.setProperty('--brand-accent', (!site.brand.accent || site.brand.accent.toLowerCase()==='#0ca6c9' ? '#00C8F8' : site.brand.accent));
     }
   }
 
