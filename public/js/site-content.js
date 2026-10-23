@@ -40,7 +40,7 @@
   async function loadBundle() {
     const force = new URLSearchParams(location.search).get('fresh') === '1';
     const cached = readCache();
-    if (!force && cached && Date.now() - cached.cachedAt < CACHE_TTL) return cached.data;
+    if (!force && !document.querySelector('main[data-hws-page="ebook"]') && cached && Date.now() - cached.cachedAt < CACHE_TTL) return cached.data;
     try { return (await fetchBundle()).data; }
     catch (err) {
       console.warn('[HWS content]', err);
