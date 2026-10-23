@@ -1,0 +1,73 @@
+---
+import { getCollection, getEntry } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ButtonLink from '../components/ButtonLink.astro';
+import VideoEmbed from '../components/VideoEmbed.astro';
+import { resolvePaymentUrl } from '../utils/payment.mjs';
+const offer=(await getEntry('pages','ebook'))?.data || {};
+const rawProjects=await getCollection('projects');
+const rawVideos=await getCollection('videos');
+const rawTestimonials=await getCollection('testimonials');
+const valid=(v)=>typeof v==='string' && /^(https?:\/\/|\/[^/])/.test(v.trim());
+const images=[
+  ...(offer.landingImages||[]).filter(x=>valid(x.image)),
+  ...rawProjects.filter(p=>p.data.featured!==false).flatMap(p=>p.data.gallery||[]).filter(x=>valid(x.image))
+].slice(0,12);
+const videos=[
+  ...(offer.landingVideos||[]).filter(x=>valid(x.url)),
+  ...rawVideos.filter(v=>v.data.featured!==false && valid(v.data.url)).map(v=>v.data)
+].slice(0,6);
+const testimonials=[
+  ...(offer.landingTestimonials||[]).filter(x=>x.quote && x.name),
+  ...rawTestimonials.filter(t=>t.data.featured!==false && t.data.quote && t.data.name).map(t=>t.data)
+].slice(0,6);
+const faqs=(await getCollection('faqs')).filter(x=>x.data.category==='ebook').sort((a,b)=>(a.data.order||99)-(b.data.order||99));
+const paymentConfigured=!!(offer.primaryPaymentUrl || offer.nigeriaPaymentUrl || offer.internationalPaymentUrl);
+const cta='Enquire About Training';
+const buyUrl='/contact/';
+const modules=[
+  ['01','Understanding the water business','Compare sachet water, bottled water, water treatment services and machine-operation career paths. Identify what can be started with your present resources.'],
+  ['02','Business setup, registration and compliance','Understand business registration, factory planning and the applicable NAFDAC, environmental, testing and documentation steps. Confirm current requirements with regulators before operating.'],
+  ['03','Water sources, testing and treatment','Learn water-source assessment, sampling, filtration, activated carbon, softening, reverse osmosis, UV and ozone, and how to select a treatment sequence based on test results.'],
+  ['04','Machines and production workflow','Identify the functions of sachet, bottle-filling, sealing, labelling and packaging equipment, plus safe start-up, monitoring, cleaning and shutdown procedures.'],
+  ['05','Practical machine operation and maintenance','Learn operator checks, common fault symptoms, hygiene practices, preventive maintenance, record keeping and when to involve a qualified technician.'],
+  ['06','Factory layout and quality control','Plan workflow from raw-water intake to finished goods, sanitation, staff hygiene, quality testing, GMP, HACCP concepts and traceability.'],
+  ['07','Budgeting, costing and profit','Work through setup categories, consumables, power, labour, maintenance, distribution costs, pricing and break-even scenarios before investing.'],
+  ['08','Sales, distribution and business growth','Plan routes to shops, schools, hotels and retailers; understand customer acquisition, inventory, cash flow and sustainable expansion.'],
+  ['09','Starting without your own factory','Explore operator roles, supervised apprenticeships, maintenance support, distribution and partnerships as possible entry routes. No job or placement is guaranteed.']
+];
+---
+<BaseLayout landing title="Water Production & Treatment Training | Harrison Water Solution" description="Step-by-step water production, water treatment and machine operations training for beginners, aspiring factory owners and people starting with limited capital.">
+<main data-hws-page="ebook" class="training-landing">
+  <div class="training-announcement">WATER PRODUCTION • TREATMENT • MACHINE OPERATIONS • BUSINESS SETUP</div>
+  <section class="training-hero">
+    <div class="container training-hero-inner">
+      <div class="eyebrow">Harrison Water Solution practical learning programme</div>
+      <h1>Learn Water Production, Water Treatment &amp; Machine Operations <span>— Step by Step.</span></h1>
+      <p class="lead">Want to own a sachet or bottled-water factory someday? Or learn valuable production and treatment skills even if you cannot afford a factory yet? Start by understanding the equipment, processes, costs and day-to-day work.</p>
+      <div class="actions"><ButtonLink href={buyUrl} label={cta}/><a class="button secondary" href="#real-work">See our work ↓</a></div>
+      <p class="training-note">For aspiring owners, young people learning a trade, machine operators and existing water-business teams.</p>
+    </div>
+  </section>
+  <section id="real-work" class="section training-proof">
+    <div class="container">
+      <div class="eyebrow">See the work before the details</div>
+      <h2>Real water-treatment and production work</h2>
+      <p class="lead">Explore actual installation, machine-operation and production media from Harrison as they become available. Only genuine project media and attributable testimonials are shown.</p>
+      {images.length>0 && <div class="training-gallery">{images.slice(0,4).map(x=><figure><img src={x.image} alt={x.alt||'Harrison water-production project'} loading="eager"/>{x.caption&&<figcaption>{x.caption}</figcaption>}</figure>)}</div>}
+      {videos.length>0 && <div class="training-videos">{videos.slice(0,2).map(x=><div><VideoEmbed url={x.url} title={x.title||'Harrison project video'}/><p>{x.caption||x.title}</p></div>)}</div>}
+      {testimonials.length>0 && <div class="training-testimonials">{testimonials.slice(0,3).map(x=><blockquote class="card"><p>“{x.quote}”</p><footer><strong>{x.name}</strong> {x.role||x.location||''}</footer></blockquote>)}</div>}
+      {images.length===0 && videos.length===0 && testimonials.length===0 && <div class="training-media-note">Verified project photographs, demonstration videos and client feedback will appear here once published. <a href="/projects/">Browse existing project information →</a></div>}
+    </div>
+  </section>
+  <section class="section section-soft"><div class="container"><div class="eyebrow">Two ways to benefit</div><h2>You do not need to own a factory to begin learning.</h2><div class="grid grid-2"><article class="card"><h3>Build toward owning a water factory</h3><p>Understand registration, site requirements, treatment-system selection, machines, funding, production costs, quality control and sales before you invest.</p></article><article class="card"><h3>Develop practical, employable technical skills</h3><p>Learn how water-treatment processes and production machines work, what operators monitor, and how to build experience through appropriate supervised practice and industry opportunities.</p></article></div></div></section>
+  <section class="section" id="curriculum"><div class="container"><div class="eyebrow">Step-by-step learning roadmap</div><h2>What you will learn in the training</h2><p class="lead">A full learning roadmap from first understanding the opportunity to operating processes, costing production and planning your next move.</p><div class="training-modules">{modules.map(([number,title,description])=><article class="training-module"><div class="number">{number}</div><div><h3>{title}</h3><p>{description}</p></div></article>)}</div><div class="actions"><ButtonLink href={buyUrl} label={cta}/></div></div></section>
+  <section class="section section-soft"><div class="container"><div class="eyebrow">Training advantage</div><h2>Once-a-week live interaction, Q&A and consultation</h2><p class="lead">Trainees join a weekly live session to ask questions, discuss water treatment and machine operations, and get guidance on their plans.</p></div></section><section class="section section-soft"><div class="container"><div class="eyebrow">From the original business blueprint</div><h2>We cover the decisions that can save you costly mistakes.</h2><div class="grid grid-2">{(offer.painPoints||[]).map(x=><div class="feature">✓ {x}</div>)}</div><div class="ebook-highlight"><strong>Based on practical industry experience</strong><p>{offer.authorText}</p></div></div></section>
+  {(images.length>4 || videos.length>2) && <section class="section"><div class="container"><div class="eyebrow">More from our work</div><h2>Machines, installations and production processes</h2>{images.length>4&&<div class="training-gallery">{images.slice(4).map(x=><figure><img src={x.image} alt={x.alt||'Water-production work'} loading="lazy"/>{x.caption&&<figcaption>{x.caption}</figcaption>}</figure>)}</div>}{videos.length>2&&<div class="training-videos">{videos.slice(2).map(x=><div><VideoEmbed url={x.url} title={x.title||'Project video'}/><p>{x.caption||x.title}</p></div>)}</div>}</div></section>}
+  <section class="section"><div class="container"><div class="eyebrow">Who should join?</div><h2>There is a starting point for you.</h2><div class="grid grid-2"><div class="card"><h3>Complete beginners &amp; young people</h3><p>Understand the sector and technical work before committing major capital.</p></div><div class="card"><h3>Future factory owners &amp; investors</h3><p>Make better decisions about sites, machinery, treatment, costing and distribution.</p></div><div class="card"><h3>Operators and technicians</h3><p>Strengthen production workflow, troubleshooting, sanitation and maintenance knowledge.</p></div><div class="card"><h3>Existing water-business teams</h3><p>Improve operational discipline, quality procedures and production planning.</p></div></div></div></section>
+  {testimonials.length>3&&<section class="section section-soft"><div class="container"><h2>More feedback from clients</h2><div class="training-testimonials">{testimonials.slice(3).map(x=><blockquote class="card"><p>“{x.quote}”</p><footer><strong>{x.name}</strong> {x.role||x.location||''}</footer></blockquote>)}</div></div></section>}
+  <section class="section section-soft"><div class="container"><div class="eyebrow">Useful learning resources</div><h2>Planning tools and checklists</h2><div class="grid grid-2">{(offer.bonuses||[]).map(x=><div class="feature">✓ {x}</div>)}</div><p class="training-note">Resources are part of the proposed training outline; confirm delivery formats and access when enquiring.</p></div></section>
+  <section class="section"><div class="container"><h2>Frequently asked questions</h2><div class="training-faq"><details class="card"><summary>Can I learn if I cannot afford a factory?</summary><p>Yes. The learning roadmap includes water-treatment principles, production workflows and operator skills, plus routes such as work experience, distribution and partnerships. Factory ownership is not required to begin learning.</p></details><details class="card"><summary>Will I operate machines during training?</summary><p>The curriculum covers machine operations. Ask Harrison to confirm whether the current intake includes supervised hands-on sessions, equipment access and the training venue.</p></details><details class="card"><summary>Is employment or a factory guaranteed?</summary><p>No. Training builds understanding and skills; it does not guarantee employment, licensing, funding, factory ownership or business profits.</p></details><details class="card"><summary>How do I confirm the training fee, dates and format?</summary><p>Use the enquiry button to request current fees, training format, dates, location and enrolment details before paying.</p></details>{faqs.filter(f=>!(/ebook|book|readers|digital access/i.test(f.data.question+' '+f.data.answer))).map(f=><details class="card"><summary>{f.data.question}</summary><p>{f.data.answer}</p></details>)}</div></div></section>
+  <section class="section training-final"><div class="container"><div class="eyebrow">Your next step</div><h2>Learn the skills. Understand the business. Build toward your opportunity.</h2><p class="lead">Whether your goal is a factory, machine-operation work, treatment expertise or a more informed investment, start with the right knowledge.</p><div class="actions"><ButtonLink href={buyUrl} label={cta}/></div><p class="training-note">{paymentConfigured?'Please confirm the included sessions, delivery format and access terms before payment.':'Contact Harrison for confirmed course fees, dates, venue and training format.'}</p></div></section>
+  <div class="sticky-buy"><ButtonLink href={buyUrl} label={cta}/></div>
+</main></BaseLayout>
