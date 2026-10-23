@@ -104,32 +104,25 @@
 
   function videoEmbed(v){try{const u=new URL(v.url);let src='';if(u.hostname.includes('youtu')){let id=u.searchParams.get('v')||u.pathname.split('/').filter(Boolean).pop();src=`https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}`;}else if(u.hostname.includes('vimeo')){const id=u.pathname.split('/').filter(Boolean).pop();src=`https://player.vimeo.com/video/${encodeURIComponent(id)}`;}return src?`<div class="video"><iframe src="${src}" title="${esc(v.title||'Video')}" loading="lazy" allowfullscreen></iframe></div>`:'';}catch{return ''}}
   function resolvePay(e){return e.nigeriaPaymentUrl||e.internationalPaymentUrl||e.primaryPaymentUrl||'/contact/'}
-  // Keep the Astro-rendered training page intact. Supabase only enhances its proof gallery.
-  // Never revert the new training offer to the legacy ebook markup.
-  function renderEbook(root, bundle) {
-    const e=bundle.pages?.ebook||{};
-    const section=root.querySelector('#real-work .container');
-    if(!section)return;
-    const images=(e.landingImages||[]).filter(x=>x?.image && /^https?:\/\//i.test(x.image));
-    const videos=(e.landingVideos||[]).filter(x=>x?.url);
-    const testimonials=(e.landingTestimonials||[]).filter(x=>x?.quote && x?.name);
-    if(!images.length&&!videos.length&&!testimonials.length)return;
-    section.querySelector('.training-media-note')?.remove();
-    const oldGallery=section.querySelector('.training-gallery');
-    if(images.length){
-      const html='<div class="training-gallery">'+images.slice(0,8).map(x=>'<figure>'+image(x.image,x.alt||'Harrison project photograph')+(x.caption?'<figcaption>'+esc(x.caption)+'</figcaption>':'')+'</figure>').join('')+'</div>';
-      if(oldGallery)oldGallery.outerHTML=html;else section.insertAdjacentHTML('beforeend',html);
-    }
-    const oldVideos=section.querySelector('.training-videos');
-    if(videos.length){
-      const html='<div class="training-videos">'+videos.slice(0,4).map(x=>'<div>'+videoEmbed(x)+(x.caption?'<p>'+esc(x.caption)+'</p>':'')+'</div>').join('')+'</div>';
-      if(oldVideos)oldVideos.outerHTML=html;else section.insertAdjacentHTML('beforeend',html);
-    }
-    const oldQuotes=section.querySelector('.training-testimonials');
-    if(testimonials.length){
-      const html='<div class="training-testimonials">'+testimonials.slice(0,6).map(x=>'<blockquote class="card">'+(x.image?image(x.image,x.name):'')+'<p>“'+esc(x.quote)+'”</p><footer><strong>'+esc(x.name)+'</strong> '+esc(x.role||x.location||'')+'</footer></blockquote>').join('')+'</div>';
-      if(oldQuotes)oldQuotes.outerHTML=html;else section.insertAdjacentHTML('beforeend',html);
-    }
+  function renderEbook(root,b) {
+    const e=b.pages?.ebook||{}, t=e.training||{}, contact=b.settings?.contact?.whatsapp||'/contact/';
+    const cta=()=>button(t.ctaUrl||contact,t.ctaText||'Enquire About Training');
+    const gallery=xs=>'<div class="training-gallery">'+xs.filter(x=>x?.image).map(x=>'<figure>'+image(x.image,x.alt||x.caption||'Project photo')+(x.caption?'<figcaption>'+esc(x.caption)+'</figcaption>':'')+'</figure>').join('')+'</div>';
+    const vids=xs=>'<div class="training-videos">'+xs.filter(x=>x?.url).map(x=>'<div>'+videoEmbed(x)+'<p>'+esc(x.caption||x.title||'')+'</p></div>').join('')+'</div>';
+    const quotes=xs=>'<div class="training-testimonials">'+xs.filter(x=>x?.image || (x?.quote&&!/^customer feedback\\s*$/i.test(x.quote.trim()))).map(x=>'<blockquote class="card">'+(x.image?image(x.image,x.name||'Client feedback'):'')+(x.quote&&!/^customer feedback\\s*$/i.test(x.quote.trim())?'<p>“'+esc(x.quote)+'”</p>':'')+'</blockquote>').join('')+'</div>';
+    const images=e.landingImages||[], videos=e.landingVideos||[], reviews=e.landingTestimonials||[];
+    const section=(eyebrow,title,body,soft=false)=>'<section class="section'+(soft?' section-soft':'')+'"><div class="container"><div class="eyebrow">'+esc(eyebrow)+'</div><h2>'+esc(title)+'</h2>'+body+'</div></section>';
+    root.innerHTML='<div class="training-announcement">'+esc(e.announcement||'WATER PRODUCTION • TREATMENT • MACHINE OPERATIONS')+'</div>'+
+    '<section class="training-hero"><div class="container training-hero-inner"><div class="eyebrow">'+esc(e.hero?.eyebrow||'Harrison Water Solution Training')+'</div><h1>'+esc(e.hero?.heading||'Water Production & Treatment Training')+'</h1><p class="lead">'+esc(e.hero?.text||'Learn water production and machine-operation skills step by step.')+'</p><div class="actions">'+cta()+'<a href="#real-work" class="button secondary">See real work ↓</a></div><p class="training-note">'+esc(t.heroNote||'For future factory owners and aspiring operators, even without factory capital.')+'</p></div></section>'+
+    '<section id="real-work" class="section training-proof"><div class="container"><div class="eyebrow">Real proof comes first</div><h2>'+esc(e.workHeading||'Our water production work')+'</h2><p class="lead">'+esc(t.proofIntro||'Explore real work and customer feedback.')+'</p>'+gallery(images.slice(0,4))+vids(videos.slice(0,2))+quotes(reviews.slice(0,3))+'</div></section>'+
+    section('Choose your path',t.audienceHeading||'Learn a skill or build toward your own factory','<div class="grid grid-2">'+(t.audiences||[]).map(x=>'<article class="card"><h3>'+esc(x.title)+'</h3><p>'+esc(x.text)+'</p></article>').join('')+'</div>',true)+
+    section('Step-by-step practical curriculum',t.modulesHeading||'What you will learn','<p class="lead">'+esc(t.modulesIntro||'From fundamentals to equipment operations and water-business growth.')+'</p><div class="training-modules">'+(t.modules||[]).map((x,i)=>'<article class="training-module"><div class="number">'+String(i+1).padStart(2,'0')+'</div><div><h3>'+esc(x.title)+'</h3><p>'+esc(x.text)+'</p></div></article>').join('')+'</div><div class="actions">'+cta()+'</div>')+
+    section('A key training advantage',t.liveHeading||'Weekly live Q&A and consultation','<p class="lead">'+esc(t.liveText||'Join a live interactive session once a week to ask questions and get guidance on your training and business plans.')+'</p>',true)+
+    section('Make informed decisions',e.painHeading||'Avoid costly mistakes','<div class="grid grid-2">'+(e.painPoints||[]).map(x=>'<div class="feature">✓ '+esc(x)+'</div>').join('')+'</div>')+
+    section('More evidence',t.moreProofHeading||'More project work',gallery(images.slice(4))+vids(videos.slice(2)),true)+
+    section('Included learning resources',e.bonusHeading||'Resources and checklists','<div class="grid grid-2">'+(e.bonuses||[]).map(x=>'<div class="feature">✓ '+esc(x)+'</div>').join('')+'</div>')+
+    section('Before you enrol',e.faqHeading||'Frequently asked questions','<div class="training-faq">'+(t.faqs||[]).map(x=>'<details class="card"><summary>'+esc(x.question)+'</summary><p>'+esc(x.answer)+'</p></details>').join('')+'</div>',true)+
+    '<section class="section training-final"><div class="container"><h2>'+esc(e.finalHeading||'Learn the skills. Build toward your opportunity.')+'</h2><p class="lead">'+esc(e.finalText||'Build your technical understanding and make informed decisions.')+'</p><div class="actions">'+cta()+'</div><p class="training-note">'+esc(t.finalNote||'Confirm fees, training dates, venue and session format before paying.')+'</p></div></section><div class="sticky-buy">'+cta()+'</div>';
   }
 
   const renderers={home:renderHome,about:renderAbout,contact:renderContact,products:renderProducts,product:renderProduct,services:renderServices,service:renderService,projects:renderProjects,ebook:renderEbook};
