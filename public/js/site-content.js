@@ -2,7 +2,7 @@
   const SUPABASE_URL = 'https://vdblajgxrfndjesoyayy.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_nATRaQcJJrIiVLm5dyKZOg_owt3cNMQ';
   const CACHE_KEY = 'hws_site_bundle_v2';
-  const CACHE_TTL = 7 * 24 * 60 * 60 * 1000;
+  const CACHE_TTL = 60 * 60 * 1000;
 
   const esc = (v = '') => String(v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
   const safeUrl = (value = '', fallback = '#') => {
@@ -32,19 +32,26 @@
     if (!res.ok) throw new Error(`Content request failed: ${res.status}`);
     const rows = await res.json();
     if (!rows[0]?.data) throw new Error('Site bundle is not published');
-    const cached = { data: rows[0].data, updatedAt: rows[0].updated_at, cachedAt: Date.now() };
-    try { localStorage.setItem(CACHE_KEY, JSON.stringify(cached)); } catch {}
-    return cached;
+    return rows[0].data;
   }
 
   async function loadBundle() {
     const force = new URLSearchParams(location.search).get('fresh') === '1';
     const cached = readCache();
     if (!force && cached && Date.now() - cached.cachedAt < CACHE_TTL) return cached.data;
-    try { return (await fetchBundle()).data; }
-    catch (err) {
-      console.warn('[HWS content]', err);
-      return cached?.data || null;
+    try {
+      // Shared, CDN-cacheable JSON snapshot: normal page visits do NOT call Supabase.
+      const data = force ? await fetchBundle() : await fetch('/content/harrison-site-bundle.json').then(res => {
+        if (!res.ok) throw new Error('Published content snapshot unavailable');
+        return res.json();
+      });
+      try { localStorage.setItem(CACHE_KEY,JSON.stringify({data,cachedAt:Date.now()})); } catch {}
+      return data;
+    } catch(err) {
+      console.warn('[HWS static content]',err);
+      if (cached?.data) return cached.data;
+      // Initial deployment safety net if the scheduled snapshot has not run yet.
+      try { return await fetchBundle(); } catch(e) { console.warn('[HWS fallback]',e); return null; }
     }
   }
 
