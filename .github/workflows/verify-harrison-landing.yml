@@ -20,5 +20,5 @@ jobs:
       - run: node --check public/admin/app.js
       - run: node --check public/js/site-content.js
       - run: node --check public/js/landing-pixels.js
-      - run: npm test
       - run: npm run build
+      - run: npm test
