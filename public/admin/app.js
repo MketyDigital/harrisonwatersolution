@@ -53,6 +53,20 @@ function normalize(){
 }
 async function load(){const {data,error}=await supabase.from('harrison_site_content').select('data').eq('content_type','settings').eq('slug','site-bundle').single();if(error)throw error;bundle=data.data;$('#login').classList.add('hidden');$('#editor').classList.remove('hidden');$('#logout').classList.remove('hidden');$('#tabs').innerHTML=tabs.map((t,i)=>`<button data-tab="${t}" class="${i===0?'active':''}">${t[0].toUpperCase()+t.slice(1)}</button>`).join('');document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>render(b.dataset.tab));render('settings')}
 $('#loginBtn').onclick=async()=>{status('Signing in…');const {error}=await supabase.auth.signInWithPassword({email:$('#email').value.trim(),password:$('#password').value});if(error)return status(error.message,true);try{await load();status('Signed in.')}catch(e){status('This account is not authorised for Harrison website editing.',true);await supabase.auth.signOut()}};
-$('#saveBtn').onclick=async()=>{collectScalars();normalize();status('Saving…');const {error}=await supabase.from('harrison_site_content').update({data:bundle}).eq('content_type','settings').eq('slug','site-bundle');if(error)return status(error.message,true);try{localStorage.removeItem('hws_site_bundle_v2')}catch{}status('Saved in Supabase. Preview the latest content using ?fresh=1. The shared public snapshot is refreshed on its publishing schedule (currently every six hours), after which visitors receive it as their browser and hosting caches expire. Saving here does not instantly clear every visitor cache.')};
+$('#saveBtn').onclick=async()=>{
+  collectScalars();normalize();status('Saving…');
+  const {error}=await supabase.from('harrison_site_content').update({data:bundle}).eq('content_type','settings').eq('slug','site-bundle');
+  if(error)return status(error.message,true);
+  try{localStorage.removeItem('hws_site_bundle_v2')}catch{}
+  status('Saved. Requesting immediate public content refresh…');
+  try {
+    const {data:publication,error:publishError}=await supabase.functions.invoke('harrison-publish-content',{body:{action:'publish'}});
+    if(publishError)throw new Error(publication?.error||publishError.message);
+    if(!publication?.queued)throw new Error(publication?.error||'Publishing was not queued');
+    status('Content saved. Public snapshot refresh queued; updates appear after the publishing workflow and hosting deployment finish (usually not instantly). Visitors check the cached file at least once each minute.');
+  }catch(e){
+    status('Content saved to Supabase, but immediate publication was not queued: '+(e.message||'unknown error')+'. The scheduled snapshot refresh is still active.',true);
+  }
+};
 $('#logout').onclick=async()=>{await supabase.auth.signOut();location.reload()};
 const {data:{session}}=await supabase.auth.getSession();if(session){try{await load()}catch{await supabase.auth.signOut()}}
