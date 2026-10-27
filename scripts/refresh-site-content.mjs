@@ -1,0 +1,10 @@
+import { mkdir, writeFile } from 'node:fs/promises';
+const url='https://vdblajgxrfndjesoyayy.supabase.co/rest/v1/harrison_site_content?select=data&content_type=eq.settings&slug=eq.site-bundle&published=eq.true&limit=1';
+const apikey='sb_publishable_nATRaQcJJrIiVLm5dyKZOg_owt3cNMQ';
+const response=await fetch(url,{headers:{apikey}});
+if(!response.ok)throw new Error('Supabase content read failed: '+response.status);
+const rows=await response.json();
+if(!rows[0]?.data?.pages||!rows[0]?.data?.settings)throw new Error('Published site content is incomplete');
+await mkdir('public/content',{recursive:true});
+await writeFile('public/content/harrison-site-bundle.json',JSON.stringify(rows[0].data)+'\n');
+console.log('Published site content snapshot generated');
