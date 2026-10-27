@@ -1,8 +1,6 @@
 /* eBook-only advertising pixels; no purchase conversion is inferred from a page view. */
 (() => {
-  if (!document.querySelector('main[data-hws-page="ebook"]')) return;
-  const endpoint='https://vdblajgxrfndjesoyayy.supabase.co/rest/v1/harrison_site_content?select=data&content_type=eq.settings&slug=eq.site-bundle&published=eq.true&limit=1';
-  const key='sb_publishable_nATRaQcJJrIiVLm5dyKZOg_owt3cNMQ';
+  if (!document.querySelector('main[data-hws-page="ebook"], main[data-hws-page="training"]')) return;
   const loaded=new Set();
   const add=(url,id)=>{if(document.getElementById(id))return;const s=document.createElement('script');s.id=id;s.async=true;s.src=url;document.head.appendChild(s)};
   function start(p={}) {
@@ -25,5 +23,8 @@
       add('https://www.googletagmanager.com/gtag/js?id='+encodeURIComponent(google),'hws-google-tag');
     }
   }
-  fetch(endpoint,{headers:{apikey:key,Authorization:'Bearer '+key},cache:'no-store'}).then(r=>r.ok?r.json():[]).then(rows=>start(rows?.[0]?.data?.pages?.ebook?.pixels)).catch(err=>console.warn('[HWS pixels]',err));
+  document.addEventListener('hws:bundle-ready',event=>{
+    const page=document.querySelector('main[data-hws-page="training"]')?'training':'ebook';
+    start(event.detail?.pages?.[page]?.pixels);
+  });
 })();
