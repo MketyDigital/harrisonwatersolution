@@ -12,9 +12,9 @@ test('logo has visible fallback and is editable from settings',()=>{
   assert.match(read('public/js/site-content.js'),/img.onerror=fallback/);
   assert.match(read('src/components/SiteHeader.astro'),/brand-logo/);
 });
-test('pixel loader is isolated to ebook and never asserts a purchase',()=>{
+test('pixel loader is isolated to landing pages and never asserts a purchase',()=>{
   const a=read('public/admin/app.js');
-  for(const id of ['meta','tiktok','google'])assert.ok(a.includes('pages.ebook.pixels.'+id));
+  for(const id of ['meta','tiktok','google'])assert.ok(a.includes('pages.training.pixels.'+id));
   const s=read('public/js/landing-pixels.js');
   assert.match(s,/main\[data-hws-page="ebook"\]/);
   assert.match(s,/PageView/);
