@@ -1,29 +1,26 @@
-# Immediate Harrison public-content publication
+# Harrison content publication
 
-Admin saves write the Supabase `harrison_site_content` bundle first, then invoke the
-`harrison-publish-content` Supabase Edge Function with the signed-in user JWT.
+A successful admin save immediately updates the authorized Supabase
+`harrison_site_content` record. Public pages normally read the static JSON
+file `/content/harrison-site-bundle.json`, **not Supabase directly**.
 
-The deployed Edge Function verifies the JWT against Supabase Auth and allows only
-`info@harrisonwatersolution.com` (matching the table RLS policy). It uses
-the **server-side only** environment variable `HARRISON_GITHUB_TOKEN` to
-dispatch GitHub Actions workflow `publish-harrison-content.yml` on `main`.
-The workflow reads the published Supabase bundle, commits a new public JSON
-snapshot only when content differs, and causes the site to redeploy through
-its existing hosting connection.
+## Publish changes on demand with one click (no new token)
 
-## One-time secret configuration (required)
+1. Save the page in Harrison's admin editor.
+2. Click the **Open one-click Publish workflow** link shown after saving,
+   or visit https://github.com/MketyDigital/harrisonwatersolution/actions/workflows/publish-harrison-content.yml
+3. Choose **Run workflow** on the **main** branch.
+4. GitHub Actions fetches the latest published content, commits the snapshot
+   only if it changed, and the hosting provider can deploy that commit.
 
-1. Create a narrowly scoped GitHub fine-grained personal access token for
-   `MketyDigital/harrisonwatersolution` with **Actions: write** repository permission.
-   Do not expose this token in JavaScript or git.
-2. Add it as the `HARRISON_GITHUB_TOKEN` Edge Functions secret for Supabase
-   project `vdblajgxrfndjesoyayy`.
-3. Save a harmless text change in the admin and verify the function responds with
-   `queued:true`, the workflow runs, and the hosting provider deploys its commit.
+This manual workflow uses the repository's native GitHub Actions token
+(`GITHUB_TOKEN`) with scoped `contents:write` permission. There is no
+separate GitHub token to put in Supabase.
 
-Until configured, an admin save still succeeds but displays the publishing
-configuration error. The six-hour scheduled workflow remains as a fallback.
+The existing scheduled refresh remains a fallback. A browser's cached
+copy is checked again after up to 60 seconds; hosting deployment and CDN
+caches may cause further delay. The website cannot forcibly clear every
+visitor's browser cache at the precise instant of an admin save.
 
-The browser checks its public JSON cache at most 60 seconds after the previous
-load, **not via Supabase**. Shared CDN caching and hosting deployment delays may
-extend visibility; content is not synchronously invalidated on every device.
+The older `harrison-publish-content` Supabase Edge Function is not used by
+the admin workflow; it may be disabled separately if desired.

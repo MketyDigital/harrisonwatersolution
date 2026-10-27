@@ -58,15 +58,13 @@ $('#saveBtn').onclick=async()=>{
   const {error}=await supabase.from('harrison_site_content').update({data:bundle}).eq('content_type','settings').eq('slug','site-bundle');
   if(error)return status(error.message,true);
   try{localStorage.removeItem('hws_site_bundle_v2')}catch{}
-  status('Saved. Requesting immediate public content refresh…');
-  try {
-    const {data:publication,error:publishError}=await supabase.functions.invoke('harrison-publish-content',{body:{action:'publish'}});
-    if(publishError)throw new Error(publication?.error||publishError.message);
-    if(!publication?.queued)throw new Error(publication?.error||'Publishing was not queued');
-    status('Content saved. Public snapshot refresh queued; updates appear after the publishing workflow and hosting deployment finish (usually not instantly). Visitors check the cached file at least once each minute.');
-  }catch(e){
-    status('Content saved to Supabase, but immediate publication was not queued: '+(e.message||'unknown error')+'. The scheduled snapshot refresh is still active.',true);
-  }
+  status('Saved to Supabase. To make changes public without waiting for the scheduled refresh, open GitHub Actions → Publish Harrison site content snapshot → Run workflow (branch: main). No new token is required. After GitHub refreshes and the host deploys, visitors see updates as caches expire.');
+  const link=document.createElement('a');
+  link.href='https://github.com/MketyDigital/harrisonwatersolution/actions/workflows/publish-harrison-content.yml';
+  link.target='_blank'; link.rel='noopener noreferrer';
+  link.textContent='Open one-click Publish workflow';
+  link.style.cssText='display:inline-block;margin:12px 0;font-weight:700';
+  $('#status').append(link);
 };
 $('#logout').onclick=async()=>{await supabase.auth.signOut();location.reload()};
 const {data:{session}}=await supabase.auth.getSession();if(session){try{await load()}catch{await supabase.auth.signOut()}}
