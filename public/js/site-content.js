@@ -130,6 +130,7 @@
     const bundle=await loadBundle();
     if(!bundle)return;
     applyGlobal(bundle);
+    document.dispatchEvent(new CustomEvent('hws:bundle-ready',{detail:bundle}));
     const fn=renderers[root.dataset.hwsPage];
     if(fn) fn(root,bundle);
   });
