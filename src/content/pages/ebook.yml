@@ -1,16 +1,16 @@
-title: Water Production & Machine Operations Training
+title: From Zero to Factory Owner
 price: '$10'
 oldPrice: ''
 currencyLabel: USD
 primaryPaymentUrl: ''
 nigeriaPaymentUrl: ''
 internationalPaymentUrl: ''
-buyButtonLabel: Enquire About Training
-announcement: Practical water production and machine operations training with weekly live Q&A
+buyButtonLabel: Get Instant Access for $10
+announcement: Practical guide for starting, costing and operating a sachet or bottled-water factory
 hero:
-  eyebrow: Harrison Water Solution Practical Training
-  heading: Learn Water Production, Treatment & Machine Operations — Step by Step
-  text: Learn water treatment, production machinery and business setup even if you cannot afford a factory yet.
+  eyebrow: The Complete Pure Water Business Blueprint
+  heading: From Zero to Factory Owner
+  text: Discover the step-by-step system for planning, setting up and operating a bottled or sachet water factory, even if you are starting with limited capital and no technical background.
 painHeading: Stop guessing about the expensive parts of starting a water factory
 painPoints:
   - Registration, licensing and government requirements feel confusing.
@@ -63,11 +63,3 @@ bonuses:
 faqHeading: Questions Before You Buy
 finalHeading: Stop wondering how to start. Use a roadmap.
 finalText: Registration, treatment, equipment, costing, factory flow, quality control and growth are easier to act on when the full process is in one place.
-
-training:
-  ctaText: Enquire About Training
-  ctaUrl: /contact/
-  liveHeading: Weekly live interaction, Q&A and consultation
-  liveText: Once a week trainees can join a live session to ask questions and discuss their water-production plans.
-  modulesHeading: Step-by-step training curriculum
-  finalNote: Contact Harrison to confirm fees, dates, venue and practical sessions.

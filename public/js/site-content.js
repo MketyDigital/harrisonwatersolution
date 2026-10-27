@@ -1,8 +1,8 @@
 (() => {
   const SUPABASE_URL = 'https://vdblajgxrfndjesoyayy.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_nATRaQcJJrIiVLm5dyKZOg_owt3cNMQ';
-  const CACHE_KEY = 'hws_site_bundle_v1';
-  const CACHE_TTL = 24 * 60 * 60 * 1000;
+  const CACHE_KEY = 'hws_site_bundle_v2';
+  const CACHE_TTL = 60 * 60 * 1000;
 
   const esc = (v = '') => String(v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
   const safeUrl = (value = '', fallback = '#') => {
@@ -32,19 +32,26 @@
     if (!res.ok) throw new Error(`Content request failed: ${res.status}`);
     const rows = await res.json();
     if (!rows[0]?.data) throw new Error('Site bundle is not published');
-    const cached = { data: rows[0].data, updatedAt: rows[0].updated_at, cachedAt: Date.now() };
-    try { localStorage.setItem(CACHE_KEY, JSON.stringify(cached)); } catch {}
-    return cached;
+    return rows[0].data;
   }
 
   async function loadBundle() {
     const force = new URLSearchParams(location.search).get('fresh') === '1';
     const cached = readCache();
-    if (!force && !document.querySelector('main[data-hws-page="ebook"]') && cached && Date.now() - cached.cachedAt < CACHE_TTL) return cached.data;
-    try { return (await fetchBundle()).data; }
-    catch (err) {
-      console.warn('[HWS content]', err);
-      return cached?.data || null;
+    if (!force && cached && Date.now() - cached.cachedAt < CACHE_TTL) return cached.data;
+    try {
+      // Shared, CDN-cacheable JSON snapshot: normal page visits do NOT call Supabase.
+      const data = force ? await fetchBundle() : await fetch('/content/harrison-site-bundle.json').then(res => {
+        if (!res.ok) throw new Error('Published content snapshot unavailable');
+        return res.json();
+      });
+      try { localStorage.setItem(CACHE_KEY,JSON.stringify({data,cachedAt:Date.now()})); } catch {}
+      return data;
+    } catch(err) {
+      console.warn('[HWS static content]',err);
+      if (cached?.data) return cached.data;
+      // Initial deployment safety net if the scheduled snapshot has not run yet.
+      try { return await fetchBundle(); } catch(e) { console.warn('[HWS fallback]',e); return null; }
     }
   }
 
@@ -104,34 +111,33 @@
 
   function videoEmbed(v){try{const u=new URL(v.url);let src='';if(u.hostname.includes('youtu')){let id=u.searchParams.get('v')||u.pathname.split('/').filter(Boolean).pop();src=`https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}`;}else if(u.hostname.includes('vimeo')){const id=u.pathname.split('/').filter(Boolean).pop();src=`https://player.vimeo.com/video/${encodeURIComponent(id)}`;}return src?`<div class="video"><iframe src="${src}" title="${esc(v.title||'Video')}" loading="lazy" allowfullscreen></iframe></div>`:'';}catch{return ''}}
   function resolvePay(e){return e.nigeriaPaymentUrl||e.internationalPaymentUrl||e.primaryPaymentUrl||'/contact/'}
-  function renderEbook(root,b) {
-    const e=b.pages?.ebook||{}, t=e.training||{}, contact=b.settings?.contact?.whatsapp||'/contact/';
-    const cta=()=>button(t.ctaUrl||contact,t.ctaText||'Enquire About Training');
-    const gallery=xs=>'<div class="training-gallery">'+xs.filter(x=>x?.image).map(x=>'<figure>'+image(x.image,x.alt||x.caption||'Project photo')+(x.caption?'<figcaption>'+esc(x.caption)+'</figcaption>':'')+'</figure>').join('')+'</div>';
-    const vids=xs=>'<div class="training-videos">'+xs.filter(x=>x?.url).map(x=>'<div>'+videoEmbed(x)+'<p>'+esc(x.caption||x.title||'')+'</p></div>').join('')+'</div>';
-    const quotes=xs=>'<div class="training-testimonials">'+xs.filter(x=>x?.image || (x?.quote&&!/^customer feedback\\s*$/i.test(x.quote.trim()))).map(x=>'<blockquote class="card">'+(x.image?image(x.image,x.name||'Client feedback'):'')+(x.quote&&!/^customer feedback\\s*$/i.test(x.quote.trim())?'<p>“'+esc(x.quote)+'”</p>':'')+'</blockquote>').join('')+'</div>';
-    const images=e.landingImages||[], videos=e.landingVideos||[], reviews=e.landingTestimonials||[];
-    const section=(eyebrow,title,body,soft=false)=>'<section class="section'+(soft?' section-soft':'')+'"><div class="container"><div class="eyebrow">'+esc(eyebrow)+'</div><h2>'+esc(title)+'</h2>'+body+'</div></section>';
-    root.innerHTML='<div class="training-announcement">'+esc(e.announcement||'WATER PRODUCTION • TREATMENT • MACHINE OPERATIONS')+'</div>'+
-    '<section class="training-hero"><div class="container training-hero-inner"><div class="eyebrow">'+esc(e.hero?.eyebrow||'Harrison Water Solution Training')+'</div><h1>'+esc(e.hero?.heading||'Water Production & Treatment Training')+'</h1><p class="lead">'+esc(e.hero?.text||'Learn water production and machine-operation skills step by step.')+'</p><div class="actions">'+cta()+'<a href="#real-work" class="button secondary">See real work ↓</a></div><p class="training-note">'+esc(t.heroNote||'For future factory owners and aspiring operators, even without factory capital.')+'</p></div></section>'+
-    '<section id="real-work" class="section training-proof"><div class="container"><div class="eyebrow">Real proof comes first</div><h2>'+esc(e.workHeading||'Our water production work')+'</h2><p class="lead">'+esc(t.proofIntro||'Explore real work and customer feedback.')+'</p>'+gallery(images.slice(0,4))+vids(videos.slice(0,2))+quotes(reviews.slice(0,3))+'</div></section>'+
-    section('Choose your path',t.audienceHeading||'Learn a skill or build toward your own factory','<div class="grid grid-2">'+(t.audiences||[]).map(x=>'<article class="card"><h3>'+esc(x.title)+'</h3><p>'+esc(x.text)+'</p></article>').join('')+'</div>',true)+
-    section('Step-by-step practical curriculum',t.modulesHeading||'What you will learn','<p class="lead">'+esc(t.modulesIntro||'From fundamentals to equipment operations and water-business growth.')+'</p><div class="training-modules">'+(t.modules||[]).map((x,i)=>'<article class="training-module"><div class="number">'+String(i+1).padStart(2,'0')+'</div><div><h3>'+esc(x.title)+'</h3><p>'+esc(x.text)+'</p></div></article>').join('')+'</div><div class="actions">'+cta()+'</div>')+
-    section('A key training advantage',t.liveHeading||'Weekly live Q&A and consultation','<p class="lead">'+esc(t.liveText||'Join a live interactive session once a week to ask questions and get guidance on your training and business plans.')+'</p>',true)+
-    section('Make informed decisions',e.painHeading||'Avoid costly mistakes','<div class="grid grid-2">'+(e.painPoints||[]).map(x=>'<div class="feature">✓ '+esc(x)+'</div>').join('')+'</div>')+
-    section('More evidence',t.moreProofHeading||'More project work',gallery(images.slice(4))+vids(videos.slice(2)),true)+
-    section('Included learning resources',e.bonusHeading||'Resources and checklists','<div class="grid grid-2">'+(e.bonuses||[]).map(x=>'<div class="feature">✓ '+esc(x)+'</div>').join('')+'</div>')+
-    section('Before you enrol',e.faqHeading||'Frequently asked questions','<div class="training-faq">'+(t.faqs||[]).map(x=>'<details class="card"><summary>'+esc(x.question)+'</summary><p>'+esc(x.answer)+'</p></details>').join('')+'</div>',true)+
-    '<section class="section training-final"><div class="container"><h2>'+esc(e.finalHeading||'Learn the skills. Build toward your opportunity.')+'</h2><p class="lead">'+esc(e.finalText||'Build your technical understanding and make informed decisions.')+'</p><div class="actions">'+cta()+'</div><p class="training-note">'+esc(t.finalNote||'Confirm fees, training dates, venue and session format before paying.')+'</p></div></section><div class="sticky-buy">'+cta()+'</div>';
+  function renderEbook(root,b){const e=b.pages?.ebook||{}, pay=resolvePay(e), projects=[], images=(e.landingImages||[]).filter(x=>x.image), tests=(e.landingTestimonials||[]).filter(x=>x.quote), vids=(e.landingVideos||[]).filter(x=>x.url), faqs=sort(b.faqs).filter(x=>(x.category||'ebook')==='ebook');root.innerHTML=`<div style="background:#dff7fb;text-align:center;padding:.65rem 1rem;font-weight:800">${esc(e.announcement)}</div><section class="ebook-hero"><div class="container hero-grid"><div><div class="eyebrow">${esc(e.hero?.eyebrow)}</div><h1>${esc(e.hero?.heading)}</h1><p class="lead">${esc(e.hero?.text)}</p><div class="actions">${button(pay,e.buyButtonLabel||'Get Instant Access')}</div></div><div class="pricing"><div class="product-meta">Digital guide</div><div class="price">${esc(e.price)}</div><h2>Complete Pure Water Business Blueprint</h2><p>Factory planning, treatment, machinery, costing, operations and growth in one practical guide.</p>${button(pay,e.buyButtonLabel||'Get Instant Access')}</div></div></section><section class="section"><div class="container grid grid-2"><div><div class="eyebrow">The problem</div><h2>${esc(e.painHeading)}</h2></div><div>${(e.painPoints||[]).map(x=>`<div class="feature">✓ ${esc(x)}</div>`).join('')}</div></div></section><section class="section section-soft"><div class="container"><div class="eyebrow">Introducing the guide</div><h2>${esc(e.introHeading)}</h2><p class="lead">${esc(e.introText)}</p><div class="ebook-highlight"><strong>${esc(e.authorHeading)}</strong><p>${esc(e.authorText)}</p></div></div></section><section class="section"><div class="container"><div class="eyebrow">Inside the book</div><h2>${esc(e.benefitsHeading)}</h2><div class="grid grid-2">${(e.benefits||[]).map(x=>`<div class="card">✓ ${esc(x)}</div>`).join('')}</div><div class="actions">${button(pay,e.buyButtonLabel||'Get Instant Access')}</div></div></section><section class="section section-soft"><div class="container"><div class="eyebrow">See what you are getting</div><h2>Practical previews that help you plan before spending</h2><div class="grid grid-2">${(e.previews||[]).map((x,i)=>`<article class="card preview"><div class="number">0${i+1}</div><h3>${esc(x.title)}</h3><p>${esc(x.text)}</p></article>`).join('')}</div></div></section>${vids.length?`<section class="section"><div class="container"><div class="eyebrow">Video</div><h2>${esc(e.videosHeading)}</h2><div class="grid grid-2">${vids.map(v=>`<article>${videoEmbed(v)}${v.caption?`<p>${esc(v.caption)}</p>`:''}</article>`).join('')}</div></div></section>`:''}<section class="section"><div class="container grid grid-2"><div><div class="eyebrow">Who it is for</div><h2>${esc(e.whoHeading)}</h2></div><div>${(e.whoItems||[]).map(x=>`<div class="feature">✓ ${esc(x)}</div>`).join('')}</div></div></section>${images.length?`<section class="section section-soft"><div class="container"><div class="eyebrow">Work done</div><h2>${esc(e.workHeading)}</h2><div class="gallery">${images.map(x=>`<figure>${image(x.image,x.alt)}${x.caption?`<figcaption>${esc(x.caption)}</figcaption>`:''}</figure>`).join('')}</div></div></section>`:''}${tests.length?`<section class="section"><div class="container"><div class="eyebrow">Proof</div><h2>${esc(e.testimonialsHeading)}</h2><div class="grid grid-3">${tests.map(t=>`<blockquote class="card">${t.image?image(t.image,t.name):''}<p class="quote">“${esc(t.quote)}”</p><footer><strong>${esc(t.name)}</strong>${t.role?` · ${esc(t.role)}`:''}${t.location?` · ${esc(t.location)}`:''}</footer>${t.url?`<a href="${esc(safeUrl(t.url,''))}" rel="noopener noreferrer" target="_blank">View reference →</a>`:''}</blockquote>`).join('')}</div></div></section>`:''}<section class="section section-soft"><div class="container grid grid-2"><div><div class="eyebrow">Included</div><h2>${esc(e.bonusHeading)}</h2></div><div>${(e.bonuses||[]).map(x=>`<div class="feature">✓ ${esc(x)}</div>`).join('')}</div></div></section><section class="section"><div class="container"><div class="eyebrow">FAQ</div><h2>${esc(e.faqHeading)}</h2>${faqs.map(f=>`<details class="card" style="margin-bottom:.75rem"><summary><strong>${esc(f.question)}</strong></summary><p>${esc(f.answer)}</p></details>`).join('')}</div></section><section class="section section-soft"><div class="container grid grid-2"><div><h2>${esc(e.finalHeading)}</h2><p class="lead">${esc(e.finalText)}</p></div><div class="pricing"><div class="price">${esc(e.price)}</div><p>One practical guide. Read it on your phone or computer.</p>${button(pay,e.buyButtonLabel||'Get Instant Access')}</div></div></section><div class="sticky-buy">${button(pay,`${e.buyButtonLabel||'Get Instant Access'} — ${e.price||''}`)}</div>`}
+
+  function renderTraining(root,b) {
+    const t=b.pages?.training||{}, media=t.media||{}, contact=b.settings?.contact?.whatsapp||'/contact/';
+    const cta=()=>button(t.ctaUrl||contact,t.ctaText||'Register for Training');
+    const gallery=(media.images||[]).filter(x=>x.image).slice(0,8).map(x=>'<figure>'+image(x.image,x.alt||'Water production project')+(x.caption?'<figcaption>'+esc(x.caption)+'</figcaption>':'')+'</figure>').join('');
+    const clips=(media.videos||[]).filter(x=>x.url).slice(0,3).map(x=>'<article>'+videoEmbed(x)+'<p>'+esc(x.caption||x.title||'')+'</p></article>').join('');
+    const reviews=(media.testimonials||[]).filter(x=>x.image||(x.quote&&x.name)).slice(0,6).map(x=>'<blockquote class="card">'+(x.image?image(x.image,x.name||'Client feedback'):'')+(x.quote?'<p>“'+esc(x.quote)+'”</p>':'')+(x.name?'<footer>'+esc(x.name)+'</footer>':'')+'</blockquote>').join('');
+    root.innerHTML='<section class="wt-hero"><div class="container wt-hero-grid"><div><div class="wt-kicker">'+esc(t.eyebrow||'Water Production Business Training')+'</div><h1>'+esc(t.heading||'Master the Water Production Business — Before You Invest Your Money!')+'</h1><p class="wt-lead">'+esc(t.subheading||'Learn what it takes to start, improve or build a career in the water industry.')+'</p><div class="wt-actions">'+cta()+'<a href="#proof" class="wt-link">See actual work ↓</a></div><p class="wt-small">'+esc(t.heroNote||'For future factory owners, existing producers and people starting without factory capital.')+'</p></div><div class="wt-visual">'+(media.images?.[0]?.image?image(media.images[0].image,media.images[0].alt||'Water production machinery'):'<div class="wt-visual-fallback"><span>WATER TREATMENT</span><strong>PLAN • SET UP • GROW</strong></div>')+'</div></div></section>'+
+    '<section class="wt-section wt-benefits"><div class="container"><p class="wt-kicker">Why join?</p><h2>Learn first. Avoid costly mistakes.</h2><div class="wt-benefit-grid">'+(t.benefits||[]).slice(0,6).map(x=>'<div class="wt-benefit"><span class="wt-tick">✓</span><span>'+esc(x)+'</span></div>').join('')+'</div></div></section>'+
+    '<section id="proof" class="wt-section wt-proof"><div class="container"><p class="wt-kicker">See the work</p><h2>'+esc(t.proofHeading||'Real projects, real machinery, real experiences')+'</h2>'+(gallery?'<div class="wt-photo-grid">'+gallery+'</div>':'')+(clips?'<div class="wt-video-grid">'+clips+'</div>':'')+(reviews?'<div class="wt-review-grid">'+reviews+'</div>':'')+(!gallery&&!clips&&!reviews?'<p>Explore our completed projects and installation work. <a href="/projects/">View projects</a></p>':'')+'</div></section>'+
+    '<section class="wt-section wt-paths"><div class="container"><p class="wt-kicker">Who is this for?</p><h2>Whatever your starting point, there is a path.</h2><div class="wt-path-grid">'+(t.audiences||[]).map(x=>'<article class="wt-path"><h3>'+esc(x.title)+'</h3><p>'+esc(x.text)+'</p></article>').join('')+'</div></div></section>'+
+    '<section class="wt-section wt-curriculum"><div class="container"><p class="wt-kicker">Inside the training</p><h2>'+esc(t.modulesHeading||'What you will learn')+'</h2><div class="wt-module-grid">'+(t.modules||[]).map((x,i)=>'<details class="wt-module"><summary><span class="wt-num">'+String(i+1).padStart(2,'0')+'</span>'+esc(x.title)+'</summary><p>'+esc(x.text)+'</p></details>').join('')+'</div><div class="wt-center">'+cta()+'</div></div></section>'+
+    '<section class="wt-section wt-about"><div class="container"><p class="wt-kicker">Learn from professionals</p><h2>'+esc(t.aboutHeading||'Guidance informed by real water-treatment and machinery work')+'</h2><p>'+esc(t.aboutText||'Learn practical planning, equipment and operational considerations from Harrison Water Solution and Machinery Services.')+'</p></div></section>'+
+    '<section class="wt-section wt-faq"><div class="container"><h2>Frequently asked questions</h2>'+(t.faqs||[]).map(x=>'<details class="wt-module"><summary>'+esc(x.question)+'</summary><p>'+esc(x.answer)+'</p></details>').join('')+'</div></section>'+
+    '<section class="wt-final"><div class="container"><h2>'+esc(t.finalHeading||'Your next step begins with the right knowledge.')+'</h2><p>'+esc(t.finalText||'Prepare to start, improve or explore opportunities in the water industry.')+'</p>'+cta()+'<small>'+esc(t.disclaimer||'Training does not guarantee income or business results. Confirm the schedule, fee and format before payment.')+'</small></div></section><div class="wt-sticky">'+cta()+'</div>';
   }
 
-  const renderers={home:renderHome,about:renderAbout,contact:renderContact,products:renderProducts,product:renderProduct,services:renderServices,service:renderService,projects:renderProjects,ebook:renderEbook};
+
+  const renderers={home:renderHome,about:renderAbout,contact:renderContact,products:renderProducts,product:renderProduct,services:renderServices,service:renderService,projects:renderProjects,ebook:renderEbook,training:renderTraining};
   document.addEventListener('DOMContentLoaded', async () => {
     const root=document.querySelector('main[data-hws-page]');
     if(!root)return;
     const bundle=await loadBundle();
     if(!bundle)return;
     applyGlobal(bundle);
+    document.dispatchEvent(new CustomEvent('hws:bundle-ready',{detail:bundle}));
     const fn=renderers[root.dataset.hwsPage];
     if(fn) fn(root,bundle);
   });

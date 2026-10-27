@@ -1,0 +1,24 @@
+name: Harrison landing verification
+on:
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'scripts/**'
+      - 'package*.json'
+      - '.github/workflows/**'
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - run: node --check public/admin/app.js
+      - run: node --check public/js/site-content.js
+      - run: node --check public/js/landing-pixels.js
+      - run: npm run build
+      - run: npm test
