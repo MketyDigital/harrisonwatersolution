@@ -2,7 +2,7 @@
   const SUPABASE_URL = 'https://vdblajgxrfndjesoyayy.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_nATRaQcJJrIiVLm5dyKZOg_owt3cNMQ';
   const CACHE_KEY = 'hws_site_bundle_v2';
-  const CACHE_TTL = 60 * 60 * 1000;
+  const CACHE_TTL = 60 * 1000;
 
   const esc = (v = '') => String(v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
   const safeUrl = (value = '', fallback = '#') => {
