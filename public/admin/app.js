@@ -10,7 +10,7 @@ function field(label,path,value='',type='text'){return `<label>${esc(label)}</la
 function setPath(obj,path,value){const parts=path.split('.');let cur=obj;parts.forEach((p,i)=>{if(i===parts.length-1)cur[p]=value;else cur=cur[p]??={}})}
 function collectScalars(){document.querySelectorAll('[data-path]').forEach(el=>setPath(bundle,el.dataset.path,el.type==='checkbox'?el.checked:el.value))}
 function arrayEditor(name,items,fields){return `<div class="collection" data-array="${name}">${(items||[]).map((item,i)=>`<div class="item" data-index="${i}"><div class="grid">${fields.map(f=>field(f.label,`${name}.${i}.${f.key}`,item[f.key]??'',f.type||'text')).join('')}</div><p><button class="danger" data-remove="${name}" data-index="${i}">Remove</button></p></div>`).join('')}</div><p><button class="secondary" data-add="${name}">+ Add</button></p>`}
-function render(tab){collectScalars();normalize();document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));let h='';
+function render(tab,skipCollect=false){if(!skipCollect)collectScalars();normalize();document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));let h='';
 if(tab==='settings'){const s=bundle.settings||{};h=`<h2>Website Settings</h2><div class="grid">${field('Company name','settings.companyName',s.companyName)}${field('Website URL','settings.siteUrl',s.siteUrl)}${field('Logo URL','settings.logo',s.logo)}${field('Favicon URL','settings.favicon',s.favicon)}${field('Primary colour','settings.brand.primary',s.brand?.primary,'color')}${field('Secondary colour','settings.brand.secondary',s.brand?.secondary,'color')}${field('Accent colour','settings.brand.accent',s.brand?.accent,'color')}${field('Phone','settings.contact.phone',s.contact?.phone)}${field('WhatsApp URL','settings.contact.whatsapp',s.contact?.whatsapp)}${field('Email','settings.contact.email',s.contact?.email,'email')}${field('Address','settings.contact.address',s.contact?.address)}${field('Opening hours','settings.contact.openingHours',s.contact?.openingHours)}</div>${field('SEO title','settings.seo.title',s.seo?.title)}${field('SEO description','settings.seo.description',s.seo?.description,'textarea')}${field('Social share image URL','settings.seo.shareImage',s.seo?.shareImage)}<h3>Social links</h3>${arrayEditor('settings.socials',s.socials,[{key:'name',label:'Platform'},{key:'url',label:'URL'}])}`}
 if(tab==='home'){const p=bundle.pages?.home||{};h=`<h2>Home Page</h2>${field('Hero eyebrow','pages.home.hero.eyebrow',p.hero?.eyebrow)}${field('Hero heading','pages.home.hero.heading',p.hero?.heading)}${field('Hero text','pages.home.hero.text',p.hero?.text,'textarea')}${field('Primary button','pages.home.hero.primaryCta',p.hero?.primaryCta)}${field('Secondary button','pages.home.hero.secondaryCta',p.hero?.secondaryCta)}${field('Services heading','pages.home.servicesHeading',p.servicesHeading)}${field('Products heading','pages.home.productsHeading',p.productsHeading)}${field('Why heading','pages.home.whyHeading',p.whyHeading)}${field('Process heading','pages.home.processHeading',p.processHeading)}${field('Final CTA heading','pages.home.ctaHeading',p.ctaHeading)}${field('Final CTA text','pages.home.ctaText',p.ctaText,'textarea')}<h3>Why Harrison items</h3>${arrayEditor('pages.home.whyItems',p.whyItems,[{key:'title',label:'Title'},{key:'text',label:'Text',type:'textarea'}])}<h3>Process steps</h3>${arrayEditor('pages.home.process',p.process,[{key:'title',label:'Title'},{key:'text',label:'Text',type:'textarea'}])}`}
 if(tab==='about'){const p=bundle.pages?.about||{};h=`<h2>About Page</h2>${field('Heading','pages.about.heading',p.heading)}${field('Introduction','pages.about.intro',p.intro,'textarea')}${field('Body','pages.about.body',p.body,'textarea')}${field('Expertise (one per line)','pages.about.expertiseText',(p.expertise||[]).join('\n'),'textarea')}`}
@@ -32,7 +32,34 @@ for(const x of bundle.projects||[]){if(x.galleryText===undefined)x.galleryText=(
 const maps={products:[{key:'name',label:'Name'},{key:'slug',label:'Slug'},{key:'category',label:'Category'},{key:'summary',label:'Summary',type:'textarea'},{key:'description',label:'Description',type:'textarea'},{key:'heroImage',label:'Main image URL'},{key:'applicationsText',label:'Applications (one per line)',type:'textarea'},{key:'specificationsText',label:'Specifications (Label: Value, one per line)',type:'textarea'},{key:'galleryText',label:'Gallery image URLs (one per line)',type:'textarea'},{key:'price',label:'Price'}],services:[{key:'name',label:'Name'},{key:'slug',label:'Slug'},{key:'summary',label:'Summary',type:'textarea'},{key:'description',label:'Description',type:'textarea'},{key:'heroImage',label:'Main image URL'},{key:'deliverablesText',label:'Deliverables (one per line)',type:'textarea'},{key:'idealForText',label:'Ideal for (one per line)',type:'textarea'},{key:'galleryText',label:'Gallery image URLs (one per line)',type:'textarea'}],projects:[{key:'title',label:'Title'},{key:'slug',label:'Slug'},{key:'summary',label:'Summary',type:'textarea'},{key:'location',label:'Location'},{key:'heroImage',label:'Main image URL'},{key:'galleryText',label:'Gallery image URLs (one per line)',type:'textarea'}],testimonials:[{key:'name',label:'Name'},{key:'role',label:'Role/Company'},{key:'location',label:'Location'},{key:'quote',label:'Testimonial',type:'textarea'},{key:'image',label:'Image URL'}],videos:[{key:'title',label:'Title'},{key:'url',label:'YouTube/Vimeo URL'},{key:'caption',label:'Caption',type:'textarea'}],faqs:[{key:'question',label:'Question'},{key:'answer',label:'Answer',type:'textarea'},{key:'category',label:'Category'}]};
 if(maps[tab])h=`<h2>${tab[0].toUpperCase()+tab.slice(1)}</h2><p class="muted">Use external URLs for images and videos. Nothing is uploaded to Supabase.</p>${arrayEditor(tab,bundle[tab],maps[tab])}`;
 $('#panel').innerHTML=h;bindDynamic(tab)}
-function bindDynamic(tab){document.querySelectorAll('[data-remove]').forEach(btn=>btn.onclick=()=>{collectScalars();const path=btn.dataset.remove.split('.');let arr=bundle;for(const p of path)arr=arr[p];arr.splice(Number(btn.dataset.index),1);render(tab)});document.querySelectorAll('[data-add]').forEach(btn=>btn.onclick=()=>{collectScalars();const path=btn.dataset.add.split('.');let obj=bundle;for(let i=0;i<path.length-1;i++)obj=obj[path[i]];const key=path.at(-1);obj[key]=obj[key]||[];obj[key].push({featured:true,order:100});render(tab)})}
+function bindDynamic(tab){
+  document.querySelectorAll('[data-remove]').forEach(btn=>btn.onclick=e=>{
+    e.preventDefault();
+    collectScalars();
+    const path=btn.dataset.remove.split('.');
+    let arr=bundle;
+    for(const p of path)arr=arr?.[p];
+    const index=Number(btn.dataset.index);
+    if(!Array.isArray(arr)||!Number.isInteger(index)||index<0||index>=arr.length)return status('Could not remove this item. Please reload the editor.',true);
+    arr.splice(index,1);
+    // Don't collect stale indexed form fields after changing the array:
+    // that previously re-created a deleted FAQ/item at its old index.
+    render(tab,true);
+    status('Item removed from editor. Click Save & Publish to save the deletion.');
+  });
+  document.querySelectorAll('[data-add]').forEach(btn=>btn.onclick=e=>{
+    e.preventDefault();
+    collectScalars();
+    const path=btn.dataset.add.split('.');
+    let obj=bundle;
+    for(let i=0;i<path.length-1;i++)obj=obj[path[i]];
+    const key=path.at(-1);
+    obj[key]=obj[key]||[];
+    obj[key].push({featured:true,order:100});
+    render(tab,true);
+    status('Item added. Click Save & Publish to publish changes.');
+  });
+}
 function normalize(){
   const p=bundle.pages||{};
   const lines=v=>String(v||'').split('\n').map(x=>x.trim()).filter(Boolean);
